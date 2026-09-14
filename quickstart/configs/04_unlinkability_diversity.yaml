@@ -1,0 +1,18 @@
+output_dir: ./quickstart/output
+save: true
+compliant: true
+num_processes: 15
+
+bio_alg: edgeface
+database: mobio
+detector: mediapipe
+
+btps:
+  algs:
+    - type: polyprotect
+      system_specific: false
+      normalize_input: true
+      binarize: false
+      overlap: 3
+      nb_coef: 5
+      coef_range: 50

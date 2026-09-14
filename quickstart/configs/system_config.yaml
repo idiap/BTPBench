@@ -1,0 +1,14 @@
+baselines:
+  - edgeface
+
+protected_baselines:
+  - polyprotect
+
+databases:
+  mobio:
+    proto_dir: ./protocols/mobio/
+    verification_samples: ./protocols/mobio/mobio-verification.csv
+    unlink_samples: ./protocols/mobio/mobio_unlink.csv
+    dataset_dir: /absolute/path/to/mobio
+    extension: ""
+    video: false

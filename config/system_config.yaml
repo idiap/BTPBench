@@ -1,0 +1,45 @@
+# Baselines accepted by experiment configurations.
+baselines:
+  - iresnet100
+  - iresnet50
+  - edgeface
+  - edgefacexs
+  - facenet
+  - random
+
+# Protected-template algorithms.
+protected_baselines:
+  - biohash
+  - polyprotect
+  - combined
+
+# Protocols are included; set each dataset_dir to your own dataset copy.
+databases:
+  soteria:
+    proto_dir: ./protocols/soteria
+    verification_samples: ./protocols/soteria/soteria-verification.csv
+    unlink_samples: ./protocols/soteria/soteria-bf-no-mask-samples.csv
+    dataset_dir: /path/to/soteria
+    extension: ""
+    video: true
+  icarb:
+    proto_dir: ./protocols/iCarB-Face/
+    verification_samples: ./protocols/iCarB-Face/icarb-verification.csv
+    unlink_samples: ./protocols/iCarB-Face/icarb-unlink.csv
+    dataset_dir: /path/to/iCarB-Face
+    extension: .avi
+    video: true
+  mobio:
+    proto_dir: ./protocols/mobio/
+    verification_samples: ./protocols/mobio/mobio-verification.csv
+    unlink_samples: ./protocols/mobio/mobio_unlink.csv
+    dataset_dir: /path/to/mobio
+    extension: ""
+    video: false
+  multipie:
+    proto_dir: ./protocols/CMU-Multi-Pie/
+    verification_samples: ./protocols/CMU-Multi-Pie/multi-pie-verification.csv
+    unlink_samples: ./protocols/CMU-Multi-Pie/multi-pie-bf-samples-light.csv
+    dataset_dir: /path/to/Multi-Pie
+    extension: ""
+    video: false

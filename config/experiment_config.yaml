@@ -1,0 +1,47 @@
+output_dir: ./results/soteria       # Where to save results
+save: true                          # Save intermediate templates
+compliant: true                     # Warn (true) or fail (false) on bad samples
+num_processes: 2                    # Number of pipeline workers
+
+# Optional inversion-evaluation controls (irreversibility/key selection)
+n_attack_trials: 10                 # Complete inversion attempts per target/key
+attack_seed: 42                     # Reproducible attack randomness
+key_sampling_seed: 42               # Reproducible key sampling/selection
+
+bio_alg: iresnet100                 # Baseline algorithm
+
+database: soteria                   # Database to evaluate
+protocols:                          # Identification protocol(s)
+  - grandtest
+# protocols: all                    # To run all protocols of available database
+
+splits: eval                        # Use `dev`, `eval`, or `all` as available
+
+detector: mediapipe                 # `mtcnn` or `mediapipe`
+
+# Parameters of the BTP algorithms
+# Remove this whole section for an unprotected-only compatible experiment.
+btps:
+  algs:
+    - type: combined
+      inner_type: polyprotect
+      normalized: true
+      system_specific: true
+      key: 34
+      nb_algs: 5
+      algs_config:
+        overlap: 2
+        nb_coef: 5
+        coef_range: 40
+        system_specific: true
+    - type: biohash
+      num_bits: 128
+      binarize: true
+      system_specific: true
+      key: 42
+    - type: polyprotect
+      overlap: 3
+      nb_coef: 5
+      coef_range: 40
+      system_specific: true
+      key: 39

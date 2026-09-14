@@ -1,0 +1,53 @@
+version = 1
+SPDX-PackageName = "BTPBench"
+SPDX-PackageSupplier = "Jérémy Maceiras jeremy.maceiras@idiap.ch"
+SPDX-PackageDownloadLocation = "https://gitlab.idiap.ch/primeaid/btpbench"
+
+[[annotations]]
+path = [
+    ".bandit",
+    ".flake8",
+    ".gitattributes",
+    ".gitignore",
+    ".gitlab-ci.yml",
+    ".pre-commit-config.yaml",
+    ".python-version",
+    "README.md",
+    "REUSE.toml",
+    "THIRDPARTY.md",
+    "config/**",
+    "docs/**",
+    "protocols/**",
+    "pyproject.toml",
+    "quickstart/**",
+    "tests/**",
+    "uv.lock",
+]
+precedence = "closest"
+SPDX-FileCopyrightText = "Copyright © 2023 Idiap Research Institute <contact@idiap.ch>"
+SPDX-License-Identifier = "LicenseRef-primeaid-NC"
+
+[[annotations]]
+path = ".reuse/templates/**"
+precedence = "override"
+SPDX-FileCopyrightText = "Copyright © 2023 Idiap Research Institute <contact@idiap.ch>"
+SPDX-License-Identifier = "LicenseRef-primeaid-NC"
+
+[[annotations]]
+path = "src/btpbench/baselines/weights/detector.tflite"
+precedence = "override"
+SPDX-FileCopyrightText = "Copyright 2021 The MediaPipe Authors"
+SPDX-License-Identifier = "Apache-2.0"
+
+[[annotations]]
+path = "src/btpbench/baselines/weights/iresnet*.pth"
+precedence = "override"
+SPDX-FileCopyrightText = "Copyright 2026 The InsightFace Authors"
+SPDX-License-Identifier = "LicenseRef-InsightFace-NonCommercial-Model"
+
+# Test face images
+[[annotations]]
+path = "tests/assets/test_preprocessor/*"
+precedence = "override"
+SPDX-FileCopyrightText = "NONE"
+SPDX-License-Identifier = "CC0-1.0"

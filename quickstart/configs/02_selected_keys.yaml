@@ -1,0 +1,27 @@
+output_dir: ./quickstart/output
+save: true
+compliant: true
+num_processes: 15
+
+n_attack_trials: 10
+attack_seed: 42
+key_sampling_seed: 42
+
+bio_alg: edgeface
+database: mobio
+detector: mediapipe
+
+btps:
+  algs:
+    - type: polyprotect
+      system_specific: false
+      normalize_input: true
+      binarize: false
+      overlap: 3
+      nb_coef: 5
+      coef_range: 50
+      method: minimize_cos
+      precision: 3
+      num_guesses: 100
+      ks_method: legacy
+      key_dictionary_file: ./quickstart/output/keys_select_fmr1000-legacy_None-minimize_cos-3-100-mobio-normalized_polyprotect_usr_3_5_50-edgeface.json

@@ -1,0 +1,155 @@
+[build-system]
+requires = ["uv_build>=0.12.5,<0.13.0"]
+build-backend = "uv_build"
+
+[project]
+name = "btpbench"
+version = "1.0.0"
+requires-python = ">=3.12,<3.13"
+description = "Evaluation pipeline for biometric template protection systems"
+readme = "README.md"
+license = "LicenseRef-primeaid-NC AND MIT AND Apache-2.0 AND LicenseRef-InsightFace-NonCommercial-Model"
+license-files = ["LICENSES/*", "THIRDPARTY.md"]
+authors = [
+    {name = "Jérémy Maceiras", email = "jeremy.maceiras@idiap.ch"},
+    {name = "Vedrana Krivokuća Hahn", email = "vedrana.krivokuca@idiap.ch"}
+]
+keywords = [
+    "biometrics",
+    "face recognition",
+    "template protection",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "Natural Language :: English",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+dependencies = [
+    "bob-measure>=6.1.1,<7",
+    "click>=8.1.7,<9",
+    "cma>=4.4.0,<5",
+    "facenet-pytorch>=2.6.0,<3",
+    "matplotlib>=3.10,<4",
+    "mediapipe>=0.10.18,<1",
+    "networkx>=3.4,<4",
+    "numpy>=1.26.4,<2",
+    "opencv-contrib-python>=4.10.0.84,<4.12",
+    "pandas>=2.2.3,<3",
+    "plotly>=5.24.1,<7",
+    "pyyaml>=6.0.2,<7",
+    "scikit-learn>=1.8.0,<2",
+    "scipy>=1.14.1,<2",
+    "timm>=1.0.12,<2",
+    "torch>=2.2.2,<2.3",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pre-commit>=4.6.2,<5",
+    "pytest>=9.1.1,<10",
+    "pytest-cov>=7.1,<8",
+    "reuse>=6.2,<7",
+]
+
+[project.urls]
+Issues = "https://gitlab.idiap.ch/primeaid/btpbench/-/issues"
+Repository = "https://gitlab.idiap.ch/primeaid/btpbench"
+
+[project.scripts]
+btpbench = "btpbench.scripts.cli:cli"
+
+[tool.uv.build-backend]
+# Ship release resources in the sdist while keeping the wheel library-focused.
+source-include = [
+    ".pre-commit-config.yaml",
+    "REUSE.toml",
+    "config/**",
+    "docs/**",
+    "protocols/**",
+    "quickstart/**",
+    "tests/**",
+    "uv.lock",
+]
+# Never package locally generated coverage databases or quickstart results.
+source-exclude = [
+    ".coverage",
+    ".coverage.*",
+    "quickstart/output/**",
+]
+
+[tool.ruff]
+line-length = 88
+target-version = "py312"
+
+[tool.ruff.format]
+docstring-code-format = true
+
+[tool.ruff.lint]
+select = [
+  "A",   # https://docs.astral.sh/ruff/rules/#flake8-builtins-a
+  "COM", # https://docs.astral.sh/ruff/rules/#flake8-commas-com
+  "D",   # https://docs.astral.sh/ruff/rules/#pydocstyle-d
+  "E",   # https://docs.astral.sh/ruff/rules/#error-e
+  "F",   # https://docs.astral.sh/ruff/rules/#pyflakes-f
+  "I",   # https://docs.astral.sh/ruff/rules/#isort-i
+  "ISC", # https://docs.astral.sh/ruff/rules/#flake8-implicit-str-concat-isc
+  "LOG", # https://docs.astral.sh/ruff/rules/#flake8-logging-log
+  "N",   # https://docs.astral.sh/ruff/rules/#pep8-naming-n
+  "NPY", # https://docs.astral.sh/ruff/rules/#numpy-specific-rules-npy
+  "PTH", # https://docs.astral.sh/ruff/rules/#flake8-use-pathlib-pth
+  "Q",   # https://docs.astral.sh/ruff/rules/#flake8-quotes-q
+  "RET", # https://docs.astral.sh/ruff/rules/#flake8-return-ret
+  "SLF", # https://docs.astral.sh/ruff/rules/#flake8-self-slf
+  "T10", # https://docs.astral.sh/ruff/rules/#flake8-debugger-t10
+  "T20", # https://docs.astral.sh/ruff/rules/#flake8-print-t20
+  "UP",  # https://docs.astral.sh/ruff/rules/#pyupgrade-up
+  "W",   # https://docs.astral.sh/ruff/rules/#warning-w
+  #"G",   # https://docs.astral.sh/ruff/rules/#flake8-logging-format-g
+  #"ICN", # https://docs.astral.sh/ruff/rules/#flake8-import-conventions-icn
+]
+ignore = [
+  "COM812", # https://docs.astral.sh/ruff/rules/missing-trailing-comma/
+  "D100",   # https://docs.astral.sh/ruff/rules/undocumented-public-module/
+  "D102",   # https://docs.astral.sh/ruff/rules/undocumented-public-method/
+  "D104",   # https://docs.astral.sh/ruff/rules/undocumented-public-package/
+  "D105",   # https://docs.astral.sh/ruff/rules/undocumented-magic-method/
+  "D107",   # https://docs.astral.sh/ruff/rules/undocumented-public-init/
+  "D203",   # https://docs.astral.sh/ruff/rules/one-blank-line-before-class/
+  "D202",   # https://docs.astral.sh/ruff/rules/no-blank-line-after-function/
+  "D205",   # https://docs.astral.sh/ruff/rules/blank-line-after-summary/
+  "D212",   # https://docs.astral.sh/ruff/rules/multi-line-summary-first-line/
+  "D213",   # https://docs.astral.sh/ruff/rules/multi-line-summary-second-line/
+  "E302",   # https://docs.astral.sh/ruff/rules/blank-lines-top-level/
+  "E402",   # https://docs.astral.sh/ruff/rules/module-import-not-at-top-of-file/
+  "E501",   # https://docs.astral.sh/ruff/rules/line-too-long/
+  "ISC001", # https://docs.astral.sh/ruff/rules/single-line-implicit-string-concatenation/
+]
+
+[tool.ruff.lint.isort]
+# Use a single line between direct and from import.
+lines-between-types = 1
+
+[tool.ruff.lint.pydocstyle]
+convention = "numpy"
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*.py" = ["D", "E501", "SLF001"]
+
+[tool.mypy]
+python_version = "3.12"
+
+[tool.pytest.ini_options]
+testpaths = [ "tests"]
+addopts = [
+    "--cov=btpbench",
+    "--cov-report=term-missing",
+    "--import-mode=append",
+]
+junit_logging = "all"
+junit_log_passing_tests = false

@@ -1,0 +1,24 @@
+output_dir: ./test_pipeline   # Where to save results
+save: true                          # Save intermediary results (template)
+compliant: true                     # Trigger warning (true) or errors (false)
+num_processes: 2                   # Number of processes used to run the pipeline.
+                                    # Choose something like #cpu_cores - 1
+
+bio_alg: edgeface                 # Baseline algorithm
+
+database: test                     # Database to evaluate
+protocols:                          # To run only specific protocol(s)
+  - grandtest
+
+splits: dev                        # or `dev` for dev split, or `all` for all possible available splits.
+
+detector: mediapipe                 # Face detector to use `mtcnn` or `mediapipe`
+
+btps:
+  algs:
+    - type: polyprotect
+      overlap: 2
+      nb_coef: 4
+      coef_range: 10
+      system_specific: true
+      key: 39                 # If system use system secific key, this can be used to manually set a key.

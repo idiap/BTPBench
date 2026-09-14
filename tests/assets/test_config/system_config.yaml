@@ -1,0 +1,22 @@
+# List of available baselines
+baselines:
+  - iresnet100
+  - iresnet50
+  - edgeface
+  - edgefacexs
+  - facenet
+
+# List of protected baselines
+protected_baselines:
+  - biohash
+  - polyprotect
+
+# Available databases
+databases:
+  test:
+    proto_dir: ./tests/assets/test_protocols
+    verification_samples: ./tests/assets/test_protocols/all-samples.csv
+    unlink_samples: ./tests/assets/test_protocols/all-samples.csv
+    dataset_dir: ./tests/assets/test_dataset/
+    extension: .png
+    video: false
