@@ -9,7 +9,7 @@ path = [
     ".flake8",
     ".gitattributes",
     ".gitignore",
-    ".gitlab-ci.yml",
+    ".github/workflows/**",
     ".pre-commit-config.yaml",
     ".python-version",
     "README.md",

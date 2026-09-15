@@ -1,0 +1,97 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+    tags:
+      - "**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  PYTHONUNBUFFERED: "1"
+  XDG_CACHE_HOME: ${{ github.workspace }}/.cache
+  UV_CACHE_DIR: ${{ github.workspace }}/.cache/uv
+
+jobs:
+  quality:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+        with:
+          lfs: true
+
+      # Keep quality checks optional when the pre-commit configuration is absent.
+      - name: Set up uv and Python
+        if: hashFiles('.pre-commit-config.yaml') != ''
+        uses: astral-sh/setup-uv@v10
+        with:
+          python-version: "3.12"
+          enable-cache: true
+          cache-suffix: quality
+
+      - name: Cache pre-commit environments
+        if: hashFiles('.pre-commit-config.yaml') != ''
+        uses: actions/cache@v6
+        with:
+          path: |
+            .cache/pip
+            .cache/pre-commit
+          key: ${{ runner.os }}-pre-commit-3.12-${{ hashFiles('.pre-commit-config.yaml', 'uv.lock') }}
+
+      - name: Install dependencies
+        if: hashFiles('.pre-commit-config.yaml') != ''
+        run: uv sync --extra dev
+
+      - name: Run quality checks
+        if: hashFiles('.pre-commit-config.yaml') != ''
+        run: |
+          uv run reuse lint
+          uv run pre-commit run --all-files --show-diff-on-failure --verbose
+
+  tests:
+    needs: quality
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+        with:
+          lfs: true
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libegl1 libgles2 libsm6 libxext6 ffmpeg libfontconfig1 libxrender1
+
+      - name: Set up uv and Python
+        uses: astral-sh/setup-uv@v10
+        with:
+          python-version: "3.12"
+          enable-cache: true
+          cache-suffix: tests
+
+      - name: Install dependencies
+        run: uv sync --extra dev
+
+      - name: Run tests
+        run: >-
+          uv run pytest -sv
+          --cov-report "html:html/coverage"
+          --cov-report "xml:coverage.xml"
+          --junitxml "junit-coverage.xml"
+          --ignore ".profile"
+
+      - name: Upload test and coverage reports
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: test-and-coverage-reports
+          path: |
+            html/
+            coverage.xml
+            junit-coverage.xml
