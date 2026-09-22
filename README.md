@@ -114,6 +114,22 @@ uv run reuse lint
 
 To install the Git hooks locally, run `uv run pre-commit install` once.
 
+## Acknowledgments
+
+We acknowledge the authors of the following methods, code, and evaluation
+framework used in BTPBench:
+
+- **PolyProtect:** the original method described in the
+  [PolyProtect paper](https://ieeexplore.ieee.org/abstract/document/9670462)
+  and the authors' [original implementation](https://gitlab.idiap.ch/bob/bob.paper.polyprotect_2021).
+- **BioHashing:** the original method described in the
+  [BioHashing paper](https://www.sciencedirect.com/science/article/abs/pii/S0031320304001876).
+  We also acknowledge the authors of
+  [bob.chapter.fingerveins_biohashing](https://gitlab.idiap.ch/bob/bob.chapter.fingerveins_biohashing)
+  for their separate BioHashing implementation.
+- **Unlinkability evaluation:** the framework proposed by Gómez-Barrero et al.
+  in their [unlinkability framework paper](https://ieeexplore.ieee.org/abstract/document/8241848).
+
 ## Licensing
 
 Project-authored code and documentation are licensed under the
