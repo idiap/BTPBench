@@ -20,7 +20,8 @@ experiments.
 The configurations use MediaPipe, cosine minimization with L-BFGS-B, five
 solver guesses per inversion attempt, ten attack trials, and seed 42. Results are saved under
 `paper/polyprotect-irreversibility/output/soteria-iresnet100/`.
-The inversion protocol CSVs are included in [protocols/](protocols/).
+The guide uses the original protocol CSVs in the repository's
+[protocols/](../../protocols/) directory.
 
 ## 2. Measure verification with ordinary keys
 
@@ -66,8 +67,10 @@ uv run btpbench irreversibility pipeline \
   -e paper/polyprotect-irreversibility/configs/experiment.yaml
 ```
 
-This attacks one template per identity using the cosine solver. With 70 usable
-SOTERIA identities and ten trials, the score CSV contains 700 attempts.
+The SOTERIA protocol uses 350 reference samples from 35 identities to estimate
+the inversion distribution and attacks 350 samples from the other 35 identities.
+With all target samples available and ten trials, the score CSV contains
+3,500 attempts.
 
 ## 4. Select keys and repeat the measurements
 
