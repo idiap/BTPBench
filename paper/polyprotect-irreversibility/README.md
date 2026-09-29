@@ -134,7 +134,7 @@ as in step 2. For Fig. 10, pass the two inversion files to
 unprotected verification file. Lower ISR indicates better inversion resistance;
 lower FNMR indicates better recognition accuracy.
 
-## 6. Compare online unlinkability — Table V
+## 6. Compare online unlinkability
 
 Use the ordinary-key configuration: this command selects a new key for each
 sample during protection. It keeps ten distinct keys within each subject and
@@ -182,7 +182,7 @@ defaults; retain the original bin count and score range when matching paper
 values. An optional `-k` restricts selection to a supplied candidate pool; see
 the [online unlinkability reference](../../docs/unlinkability.md#online-user-specific-key-selection).
 
-## 7. Measure key-selection cost — Table VII
+## 7. Measure key-selection cost
 
 Measure actual search time and candidate counts for each subject at the three
 selection thresholds:
