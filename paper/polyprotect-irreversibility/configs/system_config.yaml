@@ -1,0 +1,34 @@
+baselines:
+  - iresnet50
+  - iresnet100
+  - edgeface
+  - edgefacexs
+  - facenet
+
+protected_baselines:
+  - polyprotect
+
+# Replace each dataset_dir with the absolute path to the corresponding dataset.
+databases:
+  multipie:
+    proto_dir: ./paper/polyprotect-irreversibility/protocols/multipie
+    verification_samples: ./protocols/CMU-Multi-Pie/multi-pie-verification.csv
+    unlink_samples: ./protocols/CMU-Multi-Pie/multi-pie-verification.csv
+    dataset_dir: /path/to/Multi-Pie
+    extension: ""
+    video: false
+  soteria:
+    proto_dir: ./paper/polyprotect-irreversibility/protocols/soteria
+    verification_samples: ./protocols/soteria/soteria-verification.csv
+    unlink_samples: ./protocols/soteria/soteria-verification.csv
+    dataset_dir: /path/to/soteria
+    extension: ""
+    video: true
+  icarb:
+    proto_dir: ./paper/polyprotect-irreversibility/protocols/icarb
+    verification_samples: ./protocols/iCarB-Face/icarb-verification.csv
+    # Verification has four samples per subject; online unlinkability needs ten.
+    unlink_samples: ./protocols/iCarB-Face/icarb-unlink.csv
+    dataset_dir: /path/to/iCarB-Face
+    extension: .avi
+    video: true
