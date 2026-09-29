@@ -7,7 +7,8 @@ import json
 import logging
 
 from abc import ABC, abstractmethod
-from collections.abc import Callable
+from collections.abc import Callable, Collection, Sequence
+from dataclasses import dataclass
 from functools import partial
 from pathlib import Path
 from typing import Any
@@ -28,6 +29,101 @@ from btpbench.utils import (
 )
 
 logger = logging.getLogger(__name__)
+
+_N_USER_KEYS = 2_000_000
+
+
+@dataclass
+class KeySelectionStats:
+    """Mutable statistics collected during one user-specific key search."""
+
+    n_trials: int = 0
+
+
+def _normalize_candidate_keys(
+    keys: Collection[int],
+    source: str,
+) -> tuple[int, ...]:
+    """Validate candidate keys and remove duplicates without changing their order."""
+    normalized = []
+    seen = set()
+    for key in keys:
+        if isinstance(key, bool) or not isinstance(key, (int, numpy.integer)):
+            raise ValueError(f"{source} must contain integers.")
+        key = int(key)
+        if not 0 <= key < _N_USER_KEYS:
+            raise ValueError(
+                f"{source} contains {key}; keys must be in [0, {_N_USER_KEYS})."
+            )
+        if key not in seen:
+            normalized.append(key)
+            seen.add(key)
+    return tuple(normalized)
+
+
+def _load_candidate_keys(path: Path) -> tuple[int, ...]:
+    """Load a candidate-key pool from a JSON list, subject map, or text file."""
+    text = path.read_text(encoding="utf-8")
+    try:
+        data = json.loads(text)
+    except json.JSONDecodeError:
+        try:
+            values = [int(value) for value in text.replace(",", " ").split()]
+        except ValueError as exc:
+            raise ValueError(
+                f"Candidate key file {path} contains invalid text."
+            ) from exc
+    else:
+        if isinstance(data, list):
+            values = data
+        elif isinstance(data, dict):
+            values = list(data.values())
+        elif isinstance(data, int) and not isinstance(data, bool):
+            values = [data]
+        else:
+            raise ValueError(
+                f"Candidate key file {path} must contain an integer list or "
+                "a subject-to-integer map."
+            )
+
+    keys = _normalize_candidate_keys(values, f"Candidate key file {path}")
+    if not keys:
+        raise ValueError(f"Candidate key file {path} does not contain any keys.")
+    return keys
+
+
+def _key_search_space(
+    candidate_keys: Sequence[int] | None,
+    excluded_keys: Collection[int] | None,
+) -> tuple[tuple[int, ...] | None, set[int], int]:
+    """Prepare a random key search without materializing the default key domain."""
+    excluded = set(
+        _normalize_candidate_keys(
+            excluded_keys if excluded_keys is not None else (),
+            "excluded_keys",
+        )
+    )
+    if candidate_keys is None:
+        return None, excluded, _N_USER_KEYS
+
+    candidates = _normalize_candidate_keys(candidate_keys, "candidate_keys")
+    return candidates, excluded.intersection(candidates), len(candidates)
+
+
+def _draw_candidate_key(
+    rng: numpy.random.Generator,
+    candidates: tuple[int, ...] | None,
+    used_keys: set[int],
+) -> int:
+    """Draw one previously unused key from the configured search domain."""
+    while True:
+        if candidates is None:
+            key = int(rng.integers(0, _N_USER_KEYS))
+        else:
+            key = int(rng.choice(candidates))
+        if key not in used_keys:
+            used_keys.add(key)
+            return key
 
 
 class ProtectedTemplate(Template):
@@ -486,8 +582,62 @@ class BaselineBTP(ABC):
         thresh: float,
         compare_f: Callable[[Template, Template], float],
         seed: int | None = None,
+        *,
+        stats: KeySelectionStats | None = None,
+        candidate_keys: Sequence[int] | None = None,
+        excluded_keys: Collection[int] | None = None,
     ) -> tuple[ProtectedTemplate, Template, float]:
         """Find a suitable key for a given template."""
+
+        return self._key_selection_usr(
+            template,
+            dist,
+            thresh,
+            compare_f,
+            seed,
+            stats,
+            candidate_keys,
+            excluded_keys,
+        )
+
+    def key_selection_usr_with_stats(
+        self,
+        template: Template,
+        dist: Distribution,
+        thresh: float,
+        compare_f: Callable[[Template, Template], float],
+        seed: int | None = None,
+        *,
+        candidate_keys: Sequence[int] | None = None,
+        excluded_keys: Collection[int] | None = None,
+    ) -> tuple[ProtectedTemplate, Template, float, int]:
+        """Find a suitable key and return the number of candidate keys tested."""
+
+        stats = KeySelectionStats()
+        protected, inverted, score = self._key_selection_usr(
+            template,
+            dist,
+            thresh,
+            compare_f,
+            seed,
+            stats,
+            candidate_keys,
+            excluded_keys,
+        )
+        return protected, inverted, score, stats.n_trials
+
+    def _key_selection_usr(
+        self,
+        template: Template,
+        dist: Distribution,
+        thresh: float,
+        compare_f: Callable[[Template, Template], float],
+        seed: int | None,
+        stats: KeySelectionStats | None,
+        candidate_keys: Sequence[int] | None,
+        excluded_keys: Collection[int] | None,
+    ) -> tuple[ProtectedTemplate, Template, float]:
+        """Implement user-specific key selection for the public entry points."""
 
         if self._system_specific:
             raise RuntimeError(
@@ -502,22 +652,27 @@ class BaselineBTP(ABC):
                 thresh,
                 compare_f,
                 seed,
+                stats,
+                candidate_keys,
+                excluded_keys,
             )
 
         # Ensure we are in multiple guesses mode
         if self._ks_method != "multiple_guesses":
             raise ValueError(f"Unknown key selection method {self._ks_method}")
 
-        # Store used keys to avoid repetitions
-        used_keys: set[int] = set()
+        candidates, used_keys, n_candidates = _key_search_space(
+            candidate_keys,
+            excluded_keys,
+        )
         rng = numpy.random.default_rng(seed)
-        random_key = rng.integers(0, 2_000_000)
+        if stats is not None:
+            stats.n_trials = 0
 
-        while len(used_keys) < 2_000_000:
-            while random_key in used_keys:
-                random_key = rng.integers(0, 2_000_000)
-
-            used_keys.add(random_key)
+        while len(used_keys) < n_candidates:
+            random_key = _draw_candidate_key(rng, candidates, used_keys)
+            if stats is not None:
+                stats.n_trials += 1
 
             # Compute protected vector
             prot_template_arr = self._protect_postprocessed(
@@ -579,7 +734,7 @@ class BaselineBTP(ABC):
                 # We compute it again to ensure it's correctly saved on the disk if needed
                 prot_template = self.protect(template, key=random_key)
 
-                return (prot_template, inverted_template, score)
+                return prot_template, inverted_template, score
 
         # We should never reach this point
         raise RuntimeError(
@@ -593,17 +748,24 @@ class BaselineBTP(ABC):
         thresh: float,
         compare_f: Callable[[Template, Template], float],
         seed: int | None = None,
+        stats: KeySelectionStats | None = None,
+        candidate_keys: Sequence[int] | None = None,
+        excluded_keys: Collection[int] | None = None,
     ) -> tuple[ProtectedTemplate, Template, float]:
         """Legacy k.s. method kept only for reproducibility."""
 
-        used_keys = set()
+        candidates, used_keys, n_candidates = _key_search_space(
+            candidate_keys,
+            excluded_keys,
+        )
         rng = numpy.random.default_rng(seed)
-        random_key = rng.integers(0, 2_000_000)
+        if stats is not None:
+            stats.n_trials = 0
 
-        while True:
-            while random_key in used_keys:
-                random_key = rng.integers(0, 2_000_000)
-            used_keys.add(random_key)
+        while len(used_keys) < n_candidates:
+            random_key = _draw_candidate_key(rng, candidates, used_keys)
+            if stats is not None:
+                stats.n_trials += 1
 
             prot_template = self.protect(template, key=random_key)
 
@@ -620,7 +782,7 @@ class BaselineBTP(ABC):
                 prot_template.template_id += (
                     "_0"  # To differentiate multiple keys for same template
                 )
-                return (prot_template, inverted_template, score)
+                return prot_template, inverted_template, score
 
             # If protected template is not suitable, delete saved version if any
             logger.debug(
@@ -634,6 +796,10 @@ class BaselineBTP(ABC):
 
             template_file = self._work_dir / str(template.subject_id) / filename
             template_file.unlink(missing_ok=True)
+
+        raise RuntimeError(
+            "K.S. did not find suitable key after exhausting all options."
+        )
 
     def protect(
         self,

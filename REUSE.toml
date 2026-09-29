@@ -17,6 +17,7 @@ path = [
     "THIRDPARTY.md",
     "config/**",
     "docs/**",
+    "paper/**",
     "protocols/**",
     "pyproject.toml",
     "quickstart/**",

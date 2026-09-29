@@ -84,6 +84,15 @@ documents the shared CSV schema, identification directory layout, image and
 video path rules, verification and unlinkability sample lists,
 irreversibility files, and a validation workflow for adding a new database.
 
+## Papers
+
+Paper-specific experiment guides are maintained in [`paper/`](paper/), with a
+separate directory for each publication.
+
+| Paper | Authors | Status | Experiments |
+|---|---|---|---|
+| *A Deeper Dive into the Irreversibility of PolyProtect: Making Protected Face Templates Harder to Invert* | Vedrana Krivokuća Hahn, Jérémy Maceiras, Sébastien Marcel | Forthcoming | [Reproduction guide](paper/polyprotect-irreversibility/README.md) |
+
 ## Experiments
 
 | Experiment | Purpose | Guide |
@@ -91,9 +100,9 @@ irreversibility files, and a validation workflow for adding a new database.
 | Identification | 1:N template matching and DIR analysis | [Identification](docs/identification.md) |
 | Verification | Pairwise biometric comparison and DET analysis | [Verification](docs/verification.md) |
 | Irreversibility | Resistance of protected templates to inversion attacks | [Irreversibility](docs/irreversibility.md) |
-| Key selection | User-specific and system-specific BTP key evaluation | [Key selection](docs/key_selection.md) |
+| Key selection | User-specific key search and cost measurement, plus system-key validation | [Key selection](docs/key_selection.md) |
 | Diversity | Mutually non-matching protected-template sets | [Diversity](docs/diversity.md) |
-| Unlinkability | Linkability analysis across differently protected templates | [Unlinkability](docs/unlinkability.md) |
+| Unlinkability | Linkability analysis with assigned keys or per-sample online key selection | [Unlinkability](docs/unlinkability.md) |
 | Standalone plots | Distribution, histogram, and PolyProtect visualizations | [Plots](docs/plots.md) |
 
 See [system configuration](docs/system_config.md)

@@ -89,9 +89,10 @@ keys_bucket: "-0.9"
 
 ## Key Selection Fields
 
-These fields are used by the user-specific **key selection** pipeline.
+These fields are used by the user-specific key-selection, cost, and online
+unlinkability workflows.
 
-### User-Specific (`keyselection pipeline_user`)
+### User-Specific Key Search
 
 ```yaml
 key_sampling_seed: 42
@@ -99,7 +100,12 @@ key_sampling_seed: 42
 
 | Field | Type | Default | Description |
 |---|---|---|---|
-| `key_sampling_seed` | int or `null` | `42` | Base seed for reproducible per-subject candidate-key generation. |
+| `key_sampling_seed` | int or `null` | `42` | Base seed for reproducible per-subject and per-sample candidate-key generation. |
+
+This field is used by `keyselection pipeline_user`, `keyselection
+pipeline_user_cost`, and `unlinkability online_pipeline`. In the online
+unlinkability command, `--seed` controls only non-mated sample selection;
+`key_sampling_seed` controls the keys and key-search order.
 
 ## BTP Algorithms
 

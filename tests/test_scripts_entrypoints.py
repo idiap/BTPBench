@@ -24,11 +24,14 @@ SCRIPT_MODULES = [
     "btpbench.scripts.unlinkability.pipeline",
     "btpbench.scripts.unlinkability.metrics",
     "btpbench.scripts.unlinkability.plots",
+    "btpbench.scripts.unlinkability.online_pipeline",
+    "btpbench.scripts.online_keyselection",
     "btpbench.scripts.plots.distribution",
     "btpbench.scripts.irreversibility.metrics",
     "btpbench.scripts.irreversibility.pipeline",
     "btpbench.scripts.irreversibility.plots",
     "btpbench.scripts.keyselection.pipeline_user",
+    "btpbench.scripts.keyselection.pipeline_user_cost",
     "btpbench.scripts.identification.metrics",
     "btpbench.scripts.identification.pipeline",
     "btpbench.scripts.pipeline_utils",
@@ -47,11 +50,23 @@ def test_keyselection_cli_exposes_only_supported_workflows():
     commands = set(result.output.split())
     assert {
         "pipeline_user",
+        "pipeline_user_cost",
         "key_explorer",
         "validate_sys",
         "validate_sys_verification",
     } <= commands
     assert "pipeline_sys" not in commands
+
+
+def test_online_unlinkability_cli_help():
+    from btpbench.scripts.cli import cli
+
+    result = CliRunner().invoke(cli, ["unlinkability", "online_pipeline", "--help"])
+
+    assert result.exit_code == 0, result.output
+    assert "--random" in result.output
+    assert "--keys-file" in result.output
+    assert "--verification-file" in result.output
 
 
 @pytest.mark.parametrize("module_name", SCRIPT_MODULES)

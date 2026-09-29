@@ -71,15 +71,17 @@ source-include = [
     "REUSE.toml",
     "config/**",
     "docs/**",
+    "paper/**",
     "protocols/**",
     "quickstart/**",
     "tests/**",
     "uv.lock",
 ]
-# Never package locally generated coverage databases or quickstart results.
+# Never package locally generated coverage databases or recipe results.
 source-exclude = [
     ".coverage",
     ".coverage.*",
+    "paper/**/output/**",
     "quickstart/output/**",
 ]
 

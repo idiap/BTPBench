@@ -87,6 +87,79 @@ Every subject in `for_irreversibility.csv` must occur in the selected-key
 dictionary. Use normal verification or identification pipelines with the same
 dictionary to evaluate recognition utility separately.
 
+## Key Selection Cost
+
+The cost pipeline measures how long user-specific key selection takes and how
+many candidate keys it tests. It applies the same selection method and
+inversion settings as `pipeline_user`, using one verification template per
+subject.
+
+```bash
+uv run btpbench keyselection pipeline_user_cost \
+  -s config/system_config.yaml \
+  -e config/experiment_config.yaml \
+  -v results/verification_scores.csv
+```
+
+Without `-f`, the command evaluates FMRs `0.05`, `0.10`, and `0.20`. Supply
+`-f` repeatedly to choose another set:
+
+```bash
+uv run btpbench keyselection pipeline_user_cost \
+  -s config/system_config.yaml \
+  -e config/experiment_config.yaml \
+  -v results/verification_scores.csv \
+  -f 0.01 \
+  -f 0.05 \
+  -o results/key_selection_cost
+```
+
+| Argument | Description |
+|---|---|
+| `-s`, `--system-conf` | System configuration file (required). |
+| `-e`, `--exp-conf` | Experiment configuration with user-specific BTP algorithms (required). |
+| `-v`, `--verification-file` | Unprotected verification score CSV used to derive the thresholds (required). The legacy aliases `-d` and `--dedup-file` are accepted. |
+| `-f`, `--fmr` | Target FMR as a fraction; repeat for multiple values. Defaults to `0.05`, `0.10`, and `0.20`. |
+| `-o`, `--output-dir` | Output directory; defaults to `output_dir` in the experiment configuration. |
+| `--override` | Replace completed cost CSVs. |
+
+The verification score file must contain `score`, `probe_subject_id`, and
+`bio_ref_subject_id`. Subject IDs must be present and non-empty, and the file
+must contain at least two finite non-mated scores after NaN scores are removed.
+For every BTP and FMR, the command:
+
+1. derives the selection threshold from the verification scores;
+2. extracts the configured database's verification templates and retains the
+   first usable template for each subject;
+3. runs the configured key selector, timing only the candidate search; and
+4. records each subject followed by a mean row.
+
+Each tested candidate, including the accepted candidate, counts as one trial.
+`key_sampling_seed` makes candidate generation reproducible. The elapsed time
+still depends on the machine and `num_processes`.
+
+The output name is:
+
+```text
+key_selection_cost_fmr<fmr>-<ks_tag>-<inversion_tag>-<database>-<algorithm>-<baseline>.csv
+```
+
+Subject rows contain `subject_id`, `template_id`, `fmr`, `threshold`,
+`elapsed_seconds`, `n_trials`, and `status`. A subject with no usable template
+has status `missing_template`, zero time, and zero trials. The final `mean` row
+reports the mean time and trials over selected subjects and includes
+`n_subjects`, `n_selected`, `n_missing_templates`, and `num_processes`. Every
+row also records `key_sampling_seed`.
+
+Results are written first to a `.csv.partial` file and renamed only after the
+FMR run completes. If a search fails or the process is interrupted, the
+partial file remains and no new completed CSV is published. A
+`.csv.provenance.json` sidecar is published last and records the settings and
+input/output hashes. A completed CSV is skipped only when this provenance
+matches the current run; stale or incomplete results are recomputed.
+`--override` forces a fresh measurement. This command reports selection cost;
+it does not cache BTP templates or save the accepted keys.
+
 ## Key Explorer
 
 The key explorer finds inversion-resistant keys for random vectors across
@@ -195,7 +268,7 @@ They write one score CSV per BTP configuration:
 
 ## Experiment Configuration
 
-The user-specific pipeline uses the
+The user-specific selection and cost pipelines use the
 [common fields](experiment_config.md#common-fields) plus the
 [key-selection fields](experiment_config.md#key-selection-fields).
 System-key validation requires `n_keys` and, in key-file mode, `keys_file` and

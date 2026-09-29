@@ -19,8 +19,10 @@ Usage examples::
     btpbench irreversibility plots -i irr.csv -s id.csv -o out.png
 
     btpbench unlinkability pipeline -s sys.yaml -e exp.yaml -k keys.json -b bucket
+    btpbench unlinkability online_pipeline -s sys.yaml -e exp.yaml -v scores.csv
 
     btpbench keyselection pipeline_user -s sys.yaml -e exp.yaml -v scores.csv
+    btpbench keyselection pipeline_user_cost -s sys.yaml -e exp.yaml -v scores.csv
 
     btpbench diversity pipeline -s sys.yaml -e exp.yaml -k keys.json -b bucket
     btpbench diversity summary -i experiment_dir -o diversity-summary.csv
@@ -113,8 +115,10 @@ def keyselection():
 
 def _register_keyselection_usr():
     from btpbench.scripts.keyselection.pipeline_user import pipeline
+    from btpbench.scripts.keyselection.pipeline_user_cost import pipeline as cost
 
     keyselection.add_command(pipeline, "pipeline_user")
+    keyselection.add_command(cost, "pipeline_user_cost")
 
 
 def _register_validate_sys():
@@ -177,10 +181,12 @@ def unlinkability():
 
 
 def _register_unlinkability():
+    from btpbench.scripts.unlinkability.online_pipeline import online_pipeline
     from btpbench.scripts.unlinkability.pipeline import pipeline
     from btpbench.scripts.unlinkability.plots import main as plots
 
     unlinkability.add_command(pipeline, "pipeline")
+    unlinkability.add_command(online_pipeline, "online_pipeline")
     unlinkability.add_command(plots, "plots")
 
 

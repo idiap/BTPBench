@@ -367,12 +367,72 @@ and better diversity. See the [diversity guide](../docs/diversity.md) for
 details. The generic summary command also writes empty BioHash and combined
 PolyProtect family files in this PolyProtect-only recipe.
 
-## 9. Decide
+## 9. Measure user key-selection cost
+
+This measures the time spent searching for each subject's key and the number
+of distinct candidate keys tested, at 5%, 10%, and 20% FMR:
+
+```bash
+uv run btpbench keyselection pipeline_user_cost \
+  -s quickstart/configs/system_config.yaml \
+  -e quickstart/configs/01_baseline.yaml \
+  -v quickstart/output/verification-edgeface.csv \
+  -f 0.05 -f 0.1 -f 0.2
+```
+
+Read `elapsed_seconds` and `n_trials` in the subject and final `mean` rows of
+the three `key_selection_cost_fmr...csv` files. Feature extraction is excluded
+from the timings. Record hardware and worker count when comparing runs. This
+command performs fresh selection and does not replace the JSON from step 3.
+See [key-selection cost](../docs/key_selection.md#key-selection-cost).
+
+## 10. Compare online user-specific unlinkability
+
+This evaluates ten distinct keys per subject, with each selected key tested
+against its own sample. It uses the first ten samples in `mobio_unlink.csv` and
+does not require the shared pools from step 6.
+
+```bash
+uv run btpbench unlinkability online_pipeline \
+  -s quickstart/configs/system_config.yaml \
+  -e quickstart/configs/01_baseline.yaml \
+  --random \
+  --samples-per-subject 10 --non-mated-samples-per-subject 10 \
+  --seed 42 \
+  -o quickstart/output/online-random
+
+uv run btpbench unlinkability online_pipeline \
+  -s quickstart/configs/system_config.yaml \
+  -e quickstart/configs/01_baseline.yaml \
+  -v quickstart/output/verification-edgeface.csv \
+  -f 0.1 \
+  --samples-per-subject 10 --non-mated-samples-per-subject 10 \
+  --seed 42 \
+  -o quickstart/output/online-selected
+
+uv run btpbench unlinkability plots \
+  -m quickstart/output/online-selected/online-unlinkability-mobio-normalized_polyprotect_usr_3_5_50-edgeface-selected-ksfmr0d1-poolrandomspace-keyseed42-minimize_cos-3-100-n10-nm10-seed42-mated.csv \
+  -n quickstart/output/online-selected/online-unlinkability-mobio-normalized_polyprotect_usr_3_5_50-edgeface-selected-ksfmr0d1-poolrandomspace-keyseed42-minimize_cos-3-100-n10-nm10-seed42-non-mated.csv \
+  --metric-bins 100 --omega 1 --x-min -2 --x-max 0 \
+  -t "MOBIO unlinkability: online selected keys" \
+  -o quickstart/output/online-selected/unlinkability.png
+```
+
+Repeat the plot with the CSVs in `online-random/` (replace
+`selected-ksfmr0d1` with `random` in their names). Compare `Dsys`; lower is
+better. Each run also writes a JSON audit with accepted keys, sample IDs,
+candidate counts, and timing. `--random` skips inversion filtering; the selected
+run uses 10% FMR (`0.1`). The configuration's `key_sampling_seed` controls key
+assignment, while `--seed` controls non-mated sample sampling. See
+[online unlinkability](../docs/unlinkability.md#online-user-specific-key-selection).
+
+## 11. Decide
 
 - Selected keys should reduce ISR.
 - Selected keys may increase verification FNMR.
 - Lower `Dsys` is better.
 - Larger diversity cliques are better.
+- Key-selection time and candidate counts quantify the enrollment cost.
 
 Keep the selected keys only if their observed security gain justifies their
 observed verification cost.

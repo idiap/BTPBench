@@ -94,6 +94,112 @@ The score CSVs use the standard score format:
 The mated file contains only same-subject pairs. The non-mated file contains
 only different-subject pairs.
 
+## Online User-Specific Key Selection
+
+`online_pipeline` assigns a separate key to every unlinkability sample. Keys
+are distinct within each subject, and each subject performs its own independent
+assignment. This supports the online protocol in which a user's key is
+validated when the sample is protected.
+
+For inversion-based selection at FMR `0.05`, run:
+
+```bash
+uv run btpbench unlinkability online_pipeline \
+  -s config/system_config.yaml \
+  -e config/experiment_config.yaml \
+  -v results/verification_scores.csv \
+  -f 0.05 \
+  --samples-per-subject 60 \
+  --non-mated-samples-per-subject 10 \
+  -o results/online_unlinkability
+```
+
+With no `-k`, selection searches the full integer key domain
+`[0, 2000000)`. To restrict every subject's searches to a finite candidate
+pool, add `-k results/candidate_keys.json`. The file may contain a JSON integer
+list, a JSON subject-to-integer mapping, or comma/whitespace-separated text
+integers. Duplicate keys are removed.
+
+Use `--random` for the direct, unfiltered comparator:
+
+```bash
+uv run btpbench unlinkability online_pipeline \
+  -s config/system_config.yaml \
+  -e config/experiment_config.yaml \
+  --random \
+  --samples-per-subject 60 \
+  --non-mated-samples-per-subject 10 \
+  -o results/online_unlinkability
+```
+
+Random assignment applies distinct keys directly and does not perform template
+inversion or require verification scores. An optional `-k` restricts random
+assignment to the same finite pool format.
+
+| Argument | Description |
+|---|---|
+| `-s`, `--system-conf` | System configuration file (required). |
+| `-e`, `--exp-conf` | Experiment configuration file (required). |
+| `-v`, `--verification-file` | Unprotected comparison score CSV used to derive the selected-key threshold. Required unless `--random` is used. The aliases `-d` and `--dedup-file` are accepted. |
+| `-f`, `--ks-fmr` | FMR used to derive the selected-key threshold (default: `0.05`; selected mode only). |
+| `-k`, `--keys-file` | Optional finite candidate-key pool. Without it, the full key domain is used. |
+| `--samples-per-subject` | Number of unlinkability samples and distinct keys per subject (default: `60`; minimum: `2`). |
+| `--non-mated-samples-per-subject` | Number of protected templates sampled per subject for non-mated comparisons (default: `10`). It cannot exceed `--samples-per-subject`. |
+| `--n-subjects` | Use the first N subjects in protocol order (at least `2`), or `-1` for all subjects (default: `-1`). |
+| `--random` | Assign distinct random keys directly, without inversion-based selection. |
+| `--seed` | Seed used only to sample protected templates for non-mated comparisons (default: `42`). |
+| `-o`, `--output-dir` | Output directory; defaults to `output_dir` in the experiment configuration. |
+| `--override` | Regenerate existing online outputs. |
+
+In selected mode, the verification score file must provide at least two valid
+non-mated scores. The command derives the FMR threshold from these scores and
+builds the inversion reference distribution from the database's verification
+samples. For each unlinkability sample, it searches for an acceptable key
+while excluding keys already assigned to that subject. The random mode skips
+both of these inversion steps.
+
+`key_sampling_seed` in the experiment configuration controls key generation
+and selected-key search order. Set it to `null` for nondeterministic assignment.
+The CLI `--seed` has no effect on key assignment. A finite pool must contain at
+least `--samples-per-subject` distinct keys. If selection rejects too many keys
+to complete one subject, the command reports pool exhaustion instead of
+reusing an assigned key.
+
+For `S` retained subjects, `N = --samples-per-subject`, and
+`M = --non-mated-samples-per-subject`, the online command writes the same
+number of score rows as the assigned-key pipeline:
+
+| Score type | Number of comparisons |
+|---|---|
+| Mated | `S * N * (N - 1) / 2` |
+| Non-mated | `S * (S - 1) / 2 * M * M` |
+
+The command writes a mated score CSV, a non-mated score CSV, and a JSON
+provenance file with a shared stem:
+
+```text
+online-unlinkability-<database>-<algorithm>-<baseline>-<assignment>-pool<pool>-keyseed<key_seed>-<inversion_tag>-n<N>[-subjects<S>]-nm<M>-seed<comparison_seed>
+```
+
+Selected assignment adds `ksfmr<fmr>` to the assignment tag. The pool tag is
+`randomspace` for the full domain or the first 12 characters of the candidate
+file's SHA-256 digest. The score files end in `-mated.csv` and
+`-non-mated.csv`; the metadata file ends in `.json`.
+
+The JSON records the BTP configuration, detector, dataset path, threshold, FMR,
+requested and actual subject counts, key and comparison seeds, and output
+filenames. SHA-256 values identify both configuration files, the verification
+and unlinkability sample manifests, the verification scores, and an optional
+candidate pool. Its `selections` list is an audit row for every protected
+sample: subject ID, template ID, accepted key, inversion score, number of
+candidate trials, and selection time. In random mode, the inversion score is
+`null` and the trial count is `1`.
+
+When all three outputs already exist with matching provenance, the command
+skips them. Replacements are staged, and the metadata file is written last as
+the completion marker. Incomplete outputs or metadata from different settings
+require `--override`.
+
 ## Plotting
 
 The plotting command visualizes the two unlinkability score files as probability
@@ -229,8 +335,15 @@ With 200 subjects, this produces per BTP configuration:
 
 ## Experiment Configuration
 
-The unlinkability pipeline uses the [common fields](experiment_config.md#common-fields)
-and requires at least one BTP algorithm in
+Both unlinkability pipelines use the
+[common fields](experiment_config.md#common-fields) and require BTP algorithms in
 [experiment_config.md - BTP Algorithms](experiment_config.md#btp-algorithms).
-It does not use `protocols` or `splits`; it operates on the `unlink_samples`
+They do not use `protocols` or `splits`; they operate on the `unlink_samples`
 file defined in the system configuration for the selected database.
+
+The online command requires exactly one user-specific, single-key BTP such as
+PolyProtect. Configure `system_specific: false` and omit
+`key_dictionary_file`; selected mode also requires `ks_method: legacy`.
+Combined, chained, and cumulated BTP wrappers are not supported by this
+command. Set `key_sampling_seed` at the top level of the experiment
+configuration to reproduce online key assignment.

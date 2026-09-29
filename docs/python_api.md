@@ -137,6 +137,43 @@ reconstructs an unprotected `Template`. Supplying `seed` makes both the initial
 guess sampling and CMA-ES randomness reproducible. Use a distinct derived seed
 for every independent attack trial; the CLI does this automatically.
 
+### User-specific key selection
+
+`key_selection_usr()` searches for an acceptable user key and returns the
+protected template, its inversion, and the inversion score. Its optional
+keyword arguments support reproducible, auditable searches. Given the
+reference-feature distribution and face-recognition baseline used by the
+experiment:
+
+```python
+from btpbench.btps import KeySelectionStats
+
+stats = KeySelectionStats()
+protected, inverted, inversion_score = algorithm.key_selection_usr(
+    reference,
+    template_distribution,
+    threshold,
+    baseline.compare,
+    seed=42,
+    stats=stats,
+    candidate_keys=[104, 205, 306],
+    excluded_keys={104},
+)
+print(stats.n_trials)
+```
+
+`candidate_keys` restricts the search to the supplied integer keys;
+`excluded_keys` prevents reuse, which is useful when selecting a distinct key
+for each sample from one subject. Keys must be in `[0, 2000000)`. With no
+candidate list, the method searches that full integer domain without creating
+it in memory. Duplicate candidates are removed, and a finite pool that has no
+acceptable remaining key raises `RuntimeError`.
+
+`KeySelectionStats.n_trials` counts every candidate tested, including the
+accepted candidate. As a convenience, `key_selection_usr_with_stats()` accepts
+the same search arguments and returns `(protected, inverted, score, n_trials)`.
+The existing three-item return value of `key_selection_usr()` is unchanged.
+
 ## Score files
 
 `btpbench.scorewriter.CSVScoreWriter` writes the common score schema

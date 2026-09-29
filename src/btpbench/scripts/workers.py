@@ -4,6 +4,7 @@
 
 import logging
 
+from time import perf_counter
 from typing import Any
 
 import numpy
@@ -222,6 +223,17 @@ class BTPWorker(BaseWorker):
         self.attack_trial = extra_args.get("attack_trial", 0)
         self.key_sampling_seed = extra_args.get("key_sampling_seed")
 
+    def key_selection_seed(self, template: Template) -> int | None:
+        """Derive the reproducible key-selection seed for a template."""
+        if self.key_sampling_seed is None:
+            return None
+        return derive_seed(
+            self.key_sampling_seed,
+            "key-selection",
+            template.subject_id,
+            template.template_id,
+        )
+
     @classmethod
     def init(
         cls,
@@ -250,14 +262,7 @@ class BTPWorker(BaseWorker):
         inst = cls._instance
         assert isinstance(inst, BTPWorker)
         tpl = inst.raw_elements[idx]
-        seed = None
-        if inst.key_sampling_seed is not None:
-            seed = derive_seed(
-                inst.key_sampling_seed,
-                "key-selection",
-                tpl.subject_id,
-                tpl.template_id,
-            )
+        assert isinstance(tpl, Template)
 
         # mypy doesn't understand that inst is of type BTPWorker
         # then the following ignores...
@@ -266,8 +271,44 @@ class BTPWorker(BaseWorker):
             inst.ref_dist,  # type: ignore
             inst.thresh,  # type: ignore
             inst.compare_f,  # type: ignore
+            inst.key_selection_seed(tpl),
+        )
+
+    @classmethod
+    def key_selection_usr_cost(cls, idx: int) -> dict[str, Any]:
+        """Measure user-specific key selection for one template."""
+        inst = cls._instance
+        assert isinstance(inst, BTPWorker)
+        tpl = inst.raw_elements[idx]
+        assert isinstance(tpl, Template)
+
+        if tpl.get_template() is None:
+            return {
+                "subject_id": tpl.subject_id,
+                "template_id": tpl.template_id,
+                "elapsed_seconds": 0.0,
+                "n_trials": 0,
+                "status": "missing_template",
+            }
+
+        seed = inst.key_selection_seed(tpl)
+        start = perf_counter()
+        _, _, _, n_trials = inst.alg.key_selection_usr_with_stats(
+            tpl,
+            inst.ref_dist,  # type: ignore
+            inst.thresh,  # type: ignore
+            inst.compare_f,  # type: ignore
             seed,
         )
+        elapsed_seconds = perf_counter() - start
+
+        return {
+            "subject_id": tpl.subject_id,
+            "template_id": tpl.template_id,
+            "elapsed_seconds": elapsed_seconds,
+            "n_trials": n_trials,
+            "status": "selected",
+        }
 
     @classmethod
     def invert(cls, idx: int) -> tuple[Template, int]:
