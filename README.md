@@ -114,15 +114,17 @@ covers direct library use.
 
 ## Development
 
-Run the test suite and repository checks with:
+The development tools are optional dependencies in the `dev` extra. Include
+`--extra dev` to install them when running the test suite and repository checks:
 
 ```bash
-uv run pytest
-uv run pre-commit run --all-files
-uv run reuse lint
+uv run --extra dev pytest
+uv run --extra dev pre-commit run --all-files
+uv run --extra dev reuse lint
 ```
 
-To install the Git hooks locally, run `uv run pre-commit install` once.
+To install the Git hooks locally, run `uv run --extra dev pre-commit install`
+once.
 
 ## Acknowledgments
 
