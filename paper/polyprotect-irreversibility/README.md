@@ -227,7 +227,23 @@ uv run btpbench verification pipeline \
   -e paper/polyprotect-irreversibility/configs/selected_keys.yaml
 ```
 
-Selected-key scores are stored in a separate `fmr2000-...` subdirectory.
+Selected-key scores are stored in a separate `fmr2000-...` subdirectory under
+`output_dir`. The `fmr2000` prefix comes from the key-selection option `-f 0.2`:
+filenames encode the FMR fraction as `int(fmr * 10000)`, so
+`int(0.2 * 10000) = 2000` represents **20% FMR**. This is the threshold used
+to select keys; the evaluation thresholds in the next section are set separately.
+
+The full directory name comes from `key_dictionary_file` in
+[selected_keys.yaml](configs/selected_keys.yaml): the pipeline removes the
+`keys_select_` prefix and `.json` extension from the selected-key filename.
+For example, `keys_select_fmr2000-<settings>.json` produces the score directory
+`<output_dir>/fmr2000-<settings>/`.
+
+The remaining suffix records the key-selection settings (`legacy_None` means
+`ks_method: legacy` with `ks_n_elements` unset), inversion settings
+(`minimize_cos-3-5`: method, precision, and maximum number
+of guesses), dataset (`soteria`), PolyProtect configuration
+(`normalized_polyprotect_usr_3_5_50`), and face model (`iresnet100`).
 
 ## 7. Compare random and selected keys
 
@@ -249,8 +265,20 @@ uv run btpbench irreversibility metrics \
   -o paper/polyprotect-irreversibility/output/soteria-iresnet100/isr-comparison.csv
 ```
 
-Read `success_rate_far0.0010` and `success_rate_far0.0001`, including unsolved
-attempts in the denominator. Multiply by 100 for the ISR percentages in Table III.
+The ISR column names encode each `-f` value as a fraction formatted to four
+decimal places, using `success_rate_far{f:.4f}`. The `far` label comes from
+the command's `--far` option (false accept rate); with the unprotected
+verification scores used here, it corresponds to the paper's FMR operating point:
+
+| CLI option | Evaluation FMR | ISR column |
+|---|---|---|
+| `-f 0.001` | 0.1% | `success_rate_far0.0010` |
+| `-f 0.0001` | 0.01% | `success_rate_far0.0001` |
+
+Each cell stores successful inversion attempts divided by **all attempts**,
+including unsolved attempts in the denominator. The values are fractions;
+multiply by 100 for the ISR percentages in Table III. These evaluation FMRs
+are independent of the 20% FMR used to select keys in section 6.
 
 Compare verification accuracy for Table IV:
 
@@ -299,9 +327,7 @@ uv run btpbench unlinkability online_pipeline \
 ```
 
 `--random` assigns keys without inversion filtering. The second command tests
-candidate keys against each sample at 20% FMR. Both use the same ten samples
-per subject from `unlink_samples`. With 70 usable SOTERIA identities, each run
-writes 3,150 mated and 241,500 non-mated scores.
+candidate keys against each sample at 20% FMR.
 
 Plot the selected-key scores and read `Dsys` from the figure title or log:
 
@@ -370,7 +396,7 @@ Update the paths in the commands to match the new outputs.
 | Overlap | Change `overlap` to 0-4 for random keys, or 0-3 for selected keys. Section V excludes overlap 4 because key selection did not find suitable keys for every template on Multi-PIE and iCarB-Face. |
 | Normalization | Set `normalize_input: false` for unnormalized experiments; filenames then start with `unnormalized_polyprotect`. |
 | Solver | Set `method` to `root_l2`, `minimize_l2`, or `minimize_cos`; see the [solver-to-paper label mapping](#5-measure-inversion-with-random-keys). |
-| Selection threshold | Change the selection command to `-f 0.05`, `-f 0.1`, or `-f 0.2`. These produce `fmr500`, `fmr1000`, or `fmr2000` key files, respectively. |
+| Selection threshold | Set `-f 0.05` for **5% FMR**, `-f 0.1` for **10% FMR**, or `-f 0.2` for **20% FMR**. Key filenames encode this fraction as `int(fmr * 10000)`: `0.05 * 10000 = 500`, `0.1 * 10000 = 1000`, and `0.2 * 10000 = 2000`, giving the tags `fmr500`, `fmr1000`, and `fmr2000`, respectively. See [section 6](#6-select-keys-and-repeat-the-measurements) for how the JSON filename determines the score subdirectory. |
 
 Use a separate `output_dir` for each dataset, model, and normalization setting.
 After selecting keys for a different setting, update `key_dictionary_file` in
