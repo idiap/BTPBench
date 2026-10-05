@@ -31,8 +31,7 @@ iResNet100, and normalized PolyProtect with overlap 3**, selects user-specific
 keys, and repeats the measurements. Section 10 maps the other paper experiments
 to their configurations. Paper references below use the manuscript's section, figure,
 and table numbers. **Random keys (R)** and **selected keys (KS)** correspond to
-the two conditions in Tables III-V. See the [reproduction notes](#reproduction-notes)
-for differences between this runnable example and the manuscript's protocol.
+the two conditions in Tables III-V.
 
 ## 1. Prepare
 
@@ -198,14 +197,6 @@ uv run btpbench irreversibility pipeline \
   -s paper/polyprotect-irreversibility/configs/system_config.yaml \
   -e paper/polyprotect-irreversibility/configs/experiment.yaml
 ```
-
-The bundled SOTERIA protocol uses 350 reference samples from 35 identities to
-estimate the inversion distribution and attacks 350 samples from the other
-35 identities.
-With all target samples available and ten trials, the score CSV contains
-3,500 attempts. Section IV of the paper instead attacks one reference embedding
-per identity and estimates the initial-guess distribution on that same set.
-See the [reproduction notes](#reproduction-notes) before matching paper results.
 
 ## 6. Select keys and repeat the measurements
 
@@ -403,40 +394,3 @@ when deliberately repeating them.
 Fig. 1 (Section I) illustrates the study's focus, Fig. 2 (Section II-A)
 illustrates the transform, and Table II (Section IV) gives its dimensions;
 they require no dataset experiment.
-
-## Reproduction notes
-
-**Paper:** Section II-B (sample selection), Section IV (inversion protocol;
-Figs. 8-9), and Section V (selected-key evaluation; Figs. 10-11 and Tables
-III-VIII).
-
-The commands above use the repository's bundled protocols and explicit runtime
-defaults. To align the inversion experiment with Section IV of the manuscript:
-
-1. Create a separate protocol directory and point the dataset's `proto_dir` to
-   it in a copy of `system_config.yaml`. Put one reference sample per identity
-   in `irreversibility/for_irreversibility.csv`: 337 for Multi-PIE, 70 for
-   SOTERIA, or 197 for iCarB-Face. Use the same rows in
-   `irreversibility/for_distribution.csv`, since the paper estimates the
-   initial-guess distribution on the attacked embeddings themselves. See the
-   [protocol format](../../docs/protocols.md#irreversibility) for the CSV schema.
-2. Keep `n_attack_trials: 10`. To obtain one initial guess per trial (ten
-   initial guesses per target as described in the paper), set `num_guesses: 1`
-   in the inversion configuration. The bundled `num_guesses: 5` allows retries
-   within each trial until a solver converges; it is a separate setting from
-   the ten complete attack trials. Update output paths for the new inversion
-   tag, e.g., `minimize_cos-3-1` instead of `minimize_cos-3-5`.
-3. For selected-key experiments, ensure that each subject's key is selected
-   using its chosen reference sample. `keyselection pipeline_user` reads
-   `verification_samples`, independently of the irreversibility CSVs, and uses
-   its first usable sample per subject. Order that CSV accordingly. Retain the
-   full verification pool for FNMR and threshold estimation, and use fresh
-   attack trials to evaluate the selected keys.
-
-Use separate output directories for protocol or solver-setting changes so that
-cached results from this example are not reused. The manuscript does not
-specify seeds or the distribution precision; the bundled seed 42 and
-`precision: 3` are reproducibility settings for this guide.
-
-Keep the configurations, protocol CSVs, selected-key JSONs, repository revision,
-and execution logs with your results.
