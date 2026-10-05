@@ -1,0 +1,12 @@
+# Section II-B, Fig. 3: unprotected verification accuracy.
+# Share the baseline scores with experiment.yaml for the protected comparison.
+output_dir: ./paper/polyprotect-irreversibility/output/soteria-iresnet100
+save: true
+compliant: true
+num_processes: 2
+
+bio_alg: iresnet100
+database: soteria
+detector: mediapipe
+
+# Omitting btps runs only unprotected verification.

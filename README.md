@@ -91,7 +91,8 @@ separate directory for each publication.
 
 | Paper | Authors | Status | Experiments |
 |---|---|---|---|
-| *A Deeper Dive into the Irreversibility of PolyProtect: Making Protected Face Templates Harder to Invert* | Vedrana Krivokuća Hahn, Jérémy Maceiras, Sébastien Marcel | Forthcoming | [Reproduction guide](paper/polyprotect-irreversibility/README.md) |
+| *A Deeper Dive into the Irreversibility of PolyProtect: Making Protected Face Templates Harder to Invert* | Vedrana Krivokuća Hahn, Jérémy Maceiras, Sébastien Marcel | Under review at [IEEE Transactions on Information Forensics and Security (TIFS)](https://ieeexplore.ieee.org/xpl/RecentIssue.jsp?punumber=10206); available on [arXiv](https://arxiv.org/abs/2605.03857) | [Reproduction guide](paper/polyprotect-irreversibility/README.md) |
+| *Is it Possible to Generate Irreversible PolyProtected Templates from Face Embeddings using System-Specific Keys?* | Vedrana Krivokuća Hahn, Jérémy Maceiras, Sébastien Marcel | Under review at TIFS; available on [arXiv](https://arxiv.org/abs/2610.01385) | — |
 
 ## Experiments
 
@@ -124,6 +125,10 @@ uv run reuse lint
 To install the Git hooks locally, run `uv run pre-commit install` once.
 
 ## Acknowledgments
+
+This work was funded by the Innosuisse project
+“PRiMEAiD: Privacy-pReserving bioMetric idEntification for
+humAnitarian aid Distribution” (Number: 116.346 IP-ICT).
 
 We acknowledge the authors of the following methods, code, and evaluation
 framework used in BTPBench:
