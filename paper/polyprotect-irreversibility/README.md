@@ -1,7 +1,4 @@
-# PolyProtect irreversibility: experiment guide
-
-**A Deeper Dive into the Irreversibility of PolyProtect: Making Protected Face
-Templates Harder to Invert**
+# A Deeper Dive into the Irreversibility of PolyProtect: Making Protected Face Templates Harder to Invert
 
 Vedrana Krivokuća Hahn, Jérémy Maceiras, Sébastien Marcel.
 
@@ -36,7 +33,8 @@ the two conditions in Tables III-V.
 ## 1. Prepare
 
 1. Follow the [installation instructions](../../README.md#installation).
-2. Obtain SOTERIA and set its `dataset_dir` in
+2. Obtain [SOTERIA](https://www.idiap.ch/en/scientific-research/data/soteria)
+   and set its `dataset_dir` in
    [system_config.yaml](configs/system_config.yaml).
 3. Run the commands below from the repository root.
 
@@ -79,14 +77,27 @@ uv run btpbench verification plots \
   -o paper/polyprotect-irreversibility/output/soteria-iresnet100/unprotected-det.png
 ```
 
-Read `fnmr_10.0` for 0.1% FMR and `fnmr_1.0` for 0.01% FMR.
-Multiply these rates by 100 to report percentages. All CLI FMR values are
-fractions: `0.001` means 0.1%.
+The `verification metrics` command writes its results to
+`unprotected-metrics.csv`, the file specified by `-o` above. In that CSV,
+`fnmr_10.0` and `fnmr_1.0` are **column headers**. Their suffixes encode the
+requested FMR fraction multiplied by 10000:
+
+| CLI option | Evaluation FMR | Column in `unprotected-metrics.csv` |
+|---|---|---|
+| `-f 0.001` | 0.1% | `fnmr_10.0` (`0.001 * 10000 = 10.0`) |
+| `-f 0.0001` | 0.01% | `fnmr_1.0` (`0.0001 * 10000 = 1.0`) |
+
+The values in these columns are FNMR fractions; multiply them by 100 to report
+percentages. All CLI FMR values are fractions: `0.001` means 0.1%.
 
 For Fig. 3, repeat for all five `bio_alg` values (`iresnet50`, `iresnet100`,
-`edgeface`, `edgefacexs`, and `facenet`) on all three datasets (`multipie`,
-`soteria`, and `icarb`). Use a separate `output_dir` for each dataset/model
-pair. For each dataset, pass its five verification CSVs to `verification plots`
+`edgeface`, `edgefacexs`, and `facenet`) on all three datasets:
+[Multi-PIE](https://www.cs.cmu.edu/afs/cs/project/PIE/MultiPie/Multi-Pie/Home.html)
+(`multipie`), [SOTERIA](https://www.idiap.ch/en/scientific-research/data/soteria)
+(`soteria`), and
+[iCarB-Face](https://www.idiap.ch/en/dataset/icarb-face)
+(`icarb`). Use a separate `output_dir` for each dataset/model pair.
+For each dataset, pass its five verification CSVs to `verification plots`
 with one `-f` and corresponding `-l` per model to compare their DET curves.
 The main experiments below use the selected iResNet100 and EdgeFace models.
 
@@ -99,7 +110,7 @@ EdgeFace, and overlap 3.
 Use the provided [distribution.yaml](configs/distribution.yaml), configured
 for SOTERIA, iResNet100, overlap 3, and `normalize_input: false`. It writes to
 `paper/polyprotect-irreversibility/output/soteria-iresnet100-unnormalized/`.
-Both figures use embeddings **before input normalization**. One command
+Both figures use **unnormalized embeddings**. One command
 generates both the range and t-SNE plots:
 
 ```bash
@@ -125,9 +136,9 @@ Repeat with `bio_alg: edgeface` and an output directory ending in
 figures. Their filenames use `edgeface` in place of `iresnet100`. The command
 also generates an unprotected template norm plot (`norm_*.png`).
 
-The t-SNE plots show how PolyProtect changes the spread and separation of identities.
-The command selects 50 subjects from `verification_samples` for t-SNE; keep
-that full sample pool available. See the
+The t-SNE plots show how PolyProtect changes the spread and separation of
+identities. The command selects 50 subjects from `verification_samples` to keep
+the plots readable; keep that full sample pool available. See the
 [distribution plot reference](../../docs/plots.md#distribution-plot-t-sne)
 for sampling details and output descriptions.
 
@@ -185,12 +196,13 @@ paper labels when presenting or plotting results.
 | `minimize_l2` | Inverted (Euclidean - minimize) | `scipy.optimize.minimize`, `L-BFGS-B`, squared Euclidean objective |
 | `minimize_cos` | Inverted (Cosine - minimize) | `scipy.optimize.minimize`, `L-BFGS-B`, cosine objective |
 
-This example uses `minimize_cos`, the cosine-based attacker used for key
-selection and its evaluation in Section V. Fig. 8 compares `root_l2` with
-`minimize_cos`, labelled **Inverted (Euclidean)** and **Inverted (Cosine)** in
-that figure. Fig. 9 adds `minimize_l2` to isolate the effect of the distance
-function. All three attacks are evaluated against the original unprotected
-embedding using cosine comparison scores, regardless of the solver objective.
+This example uses the cosine-based attacker, `minimize_cos`, which Section V
+uses for key selection and for evaluating the selected keys. Fig. 8 compares
+`root_l2` with `minimize_cos`, labelled **Inverted (Euclidean)** and
+**Inverted (Cosine)** in that figure. Fig. 9 adds `minimize_l2` to isolate the
+effect of the distance function. All three attacks are evaluated against the
+original unprotected embedding using cosine comparison scores, regardless of
+the solver objective.
 
 ```bash
 uv run btpbench irreversibility pipeline \
@@ -239,11 +251,9 @@ The full directory name comes from `key_dictionary_file` in
 For example, `keys_select_fmr2000-<settings>.json` produces the score directory
 `<output_dir>/fmr2000-<settings>/`.
 
-The remaining suffix records the key-selection settings (`legacy_None` means
-`ks_method: legacy` with `ks_n_elements` unset), inversion settings
-(`minimize_cos-3-5`: method, precision, and maximum number
-of guesses), dataset (`soteria`), PolyProtect configuration
-(`normalized_polyprotect_usr_3_5_50`), and face model (`iresnet100`).
+The suffix also records inversion settings (`minimize_cos-3-5`: method,
+precision, and maximum number of guesses), dataset (`soteria`), PolyProtect
+configuration (`normalized_polyprotect_usr_3_5_50`), and face model (`iresnet100`).
 
 ## 7. Compare random and selected keys
 
@@ -298,14 +308,15 @@ as in step 4. For Fig. 10, pass the two inversion files to
 unprotected verification file. Lower ISR indicates better inversion resistance;
 lower FNMR indicates better recognition accuracy.
 
-## 8. Compare online unlinkability
+## 8. Compare unlinkability
 
 **Paper:** Section V-B, Table V (random versus selected keys); Section V-C,
 Table VI repeats the comparison at different key-selection thresholds.
 
-Use the random-key configuration: this command selects a new key for each
-sample during protection. It keeps ten distinct keys within each subject and
-records the sample-to-key assignments in a JSON audit file.
+Both commands below use [experiment.yaml](configs/experiment.yaml) and the
+`online_pipeline` command, which generates or selects a new key as each sample
+is protected. Each run keeps ten distinct keys within each subject and records
+the sample-to-key assignments in a JSON audit file.
 
 ```bash
 uv run btpbench unlinkability online_pipeline \
@@ -326,8 +337,10 @@ uv run btpbench unlinkability online_pipeline \
   -o paper/polyprotect-irreversibility/output/soteria-iresnet100/online-selected
 ```
 
-`--random` assigns keys without inversion filtering. The second command tests
-candidate keys against each sample at 20% FMR.
+The **first command evaluates random keys**: `--random` assigns keys without
+inversion filtering. The **second command evaluates selected keys**: it tests
+candidate keys against each sample using the 20% FMR threshold and selects a
+key for which inversion fails.
 
 Plot the selected-key scores and read `Dsys` from the figure title or log:
 
@@ -347,7 +360,7 @@ condition. These use `random` instead of `selected-ksfmr0d2` in their names.
 current metric defaults; the manuscript does not specify the bin count or
 score range, so matching its numerical values requires those original settings.
 An optional `-k` restricts selection to a supplied candidate pool; see
-the [online unlinkability reference](../../docs/unlinkability.md#online-user-specific-key-selection).
+the [unlinkability command reference](../../docs/unlinkability.md#online-user-specific-key-selection).
 
 ## 9. Measure key-selection cost
 
@@ -391,7 +404,7 @@ Update the paths in the commands to match the new outputs.
 
 | Change | What to edit |
 |---|---|
-| Dataset | Set `database` to `multipie` or `icarb`; fill in that dataset's `dataset_dir` in the system configuration. |
+| Dataset | Set `database` to `multipie` for [Multi-PIE](https://www.cs.cmu.edu/afs/cs/project/PIE/MultiPie/Multi-Pie/Home.html) or `icarb` for [iCarB-Face](https://www.idiap.ch/en/dataset/icarb-face); obtain the dataset and fill in its `dataset_dir` in the system configuration. |
 | Face model | Set `bio_alg` to `edgeface`. Fig. 3 also uses `iresnet50`, `edgefacexs`, and `facenet`. |
 | Overlap | Change `overlap` to 0-4 for random keys, or 0-3 for selected keys. Section V excludes overlap 4 because key selection did not find suitable keys for every template on Multi-PIE and iCarB-Face. |
 | Normalization | Set `normalize_input: false` for unnormalized experiments; filenames then start with `unnormalized_polyprotect`. |
@@ -414,7 +427,7 @@ when deliberately repeating them.
 | IV | Fig. 9 | Add `minimize_l2` to the normalized iResNet100 solver comparison on all datasets, for overlaps 0 and 3. |
 | V and V-A | Figs. 10 and 11; Tables III and IV | Repeat steps 4-7 for all datasets, both main models, and overlaps 0-3. The figures show iResNet100; the tables also report EdgeFace. |
 | V-B | Table V | Repeat step 8 for all datasets, both main models, and overlaps 0-3. |
-| V-C | Table VI | Multi-PIE, both main models, overlap 3; select at 5%, 10%, and 20% FMR, evaluate ISR/FNMR at 0.01% FMR, and repeat online unlinkability at each selection threshold. |
+| V-C | Table VI | Multi-PIE, both main models, overlap 3; select at 5%, 10%, and 20% FMR, evaluate ISR/FNMR at 0.01% FMR, and repeat the unlinkability experiment in step 8 at each selection threshold. |
 | V-D | Tables VII and VIII | Repeat step 9 on Multi-PIE, both main models, overlaps 0 and 3, at 5%, 10%, and 20% FMR; report mean search time and mean failed-key count separately. |
 
 Fig. 1 (Section I) illustrates the study's focus, Fig. 2 (Section II-A)
